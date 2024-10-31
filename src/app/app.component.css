@@ -1,0 +1,92 @@
+.container
+{
+    margin-top: 0.25rem;    
+    padding-bottom: 0.5rem;
+    background-color: antiquewhite;
+    border-radius: 20px;
+}
+
+.gameBoard
+{
+    background-color: #471900;
+    height: 50rem;
+    border: 1rem solid #a54100; 
+}
+
+.bgReverse
+{
+    transform: rotate(180deg);
+}
+
+.gameField
+{
+    height: 20rem;
+}
+
+.bgWhite
+{
+    background-image: url("../assets/img/white.png");
+    background-repeat: round;
+}
+
+.bgBlack
+{
+    background-image: url("../assets/img/black.png");
+    background-repeat: round;
+}
+
+.gameBoardVertGap
+{
+    background-color: #a54100;
+    height: 50rem;
+}
+
+.brandString
+{
+
+    color: antiquewhite;
+    height: 2rem;
+    margin: 3rem 0;
+    font-family: "Lucida Handwriting";
+}
+
+.coinRow
+{
+    background-repeat: round;
+    height: 4rem;
+    width: 4rem;
+    margin: 0;
+}
+
+.yellowCoin
+{
+    background-image:  url("../assets/img/yellowChip.png");
+}
+
+.blueCoin
+{
+    background-image:  url("../assets/img/blueChip.png");
+}
+
+.alignRight
+{
+    text-align: right;
+}
+
+.alignLeft
+{
+    text-align: left;
+}
+
+.title
+{
+    color:#471900;
+}
+
+.header
+{
+    border: 3px solid black;
+    border-radius: 20px;
+    background-color: burlywood;
+    margin-bottom: 0.25rem;
+}
