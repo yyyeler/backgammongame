@@ -14,13 +14,14 @@ export class AppComponent {
   btw2 : number []= [0,1];
   btw6 : number []= [1,2,3,4,5,6];
   btw5 : number []= [1,2,3,4,5];
-  brandString = "Yunus Yusufhan Yeler";
+  brandString = "yyyeler.com";
   imageSrc1 = "assets/img/dice_1.png";
   imageSrc2 = "assets/img/dice_1.png";
   userOrder : boolean = true;
   remainDice : boolean = true;
   remainingMoves : number[] = []; 
   holdingValue : number = -1;
+  grave : number[] = [0,0];
 
   field : Field[]= [{value : 2,user : 2},{value : 0,user : 0},{value : 0,user : 0},{value : 0,user : 0},{value : 0,user : 0},{value : 5,user : 1},
                     {value : 0,user : 0},{value : 3,user : 1},{value : 0,user : 0},{value : 0,user : 0},{value : 0,user : 0},{value : 5,user : 2},
@@ -32,10 +33,13 @@ export class AppComponent {
     let dice1 = Math.floor(Math.random() * 6)+1;
     let dice2 = Math.floor(Math.random() * 6)+1;
 
-    this.remainingMoves = [dice1,dice2];
+    if(dice1 === dice2) this.remainingMoves = [dice1,dice1,dice1,dice1];
+    else this.remainingMoves = [dice1,dice2];
 
-    this.imageSrc1 = "assets/img/dice_"+dice1+".png";
-    this.imageSrc2= "assets/img/dice_"+dice2+".png";
+    this.imageSrc1 = this.getDiceUrl(dice1);
+    this.imageSrc2 = this.getDiceUrl(dice2);
+
+    this.remainDice = false;
   }
 
   checkField(val1 : number , val2 : number , val3 : number ,swtch : boolean) : string
@@ -69,29 +73,31 @@ export class AppComponent {
 
   makeMove(val1 : number, val2 : number, swtch : boolean)
   {
-    let key = this.calculateKey(val1 , val2  , swtch);
-    
-    console.log(this.holdingValue+" "+key);
-    
-    if(this.holdingValue === -1) this.holdingValue = key;
-    else 
+    if(this.remainDice) alert("Shake dice first !!!");
+    else
     {
-      if(this.checkIsValid(key))
+      let key = this.calculateKey(val1 , val2  , swtch);
+      
+      if(this.holdingValue === -1) this.holdingValue = key;
+      else 
       {
-        this.field[this.holdingValue].value--;
-
-        if(this.field[key].user == 0) this.field[key].user = this.field[this.holdingValue].user; 
-        this.field[key].value++;
-        this.holdingValue = -1;
+        if(this.checkIsValid(key))
+        {
+          this.field[this.holdingValue].value--;
+  
+          if(this.field[key].user == 0) this.field[key].user = this.field[this.holdingValue].user; 
+          this.field[key].value++;
+          this.holdingValue = -1;
+        }
+        else
+        {
+          this.holdingValue = -1;
+          alert("Move is not valid!");
+        }
       }
-      else
-      {
-        this.holdingValue = -1;
-        alert("Move is not valid!");
-      }
-    }
-
-    console.log(this.field);
+  
+      if(this.remainingMoves.length == 0)  this.finishMoves();
+    }  
   }
 
   calculateKey(val1 : number , val2 : number , swtch : boolean)
@@ -120,21 +126,55 @@ export class AppComponent {
 
   checkIsValid(key : number) : boolean
   {
-    if(key <= this.holdingValue) return false;
+    let willGraveFill : boolean = false;
+    let swtch = (key >= this.holdingValue && this.userOrder) || (key <= this.holdingValue && !this.userOrder);
+    if(swtch) return false;
     if(this.field[this.holdingValue].value === 0) return false;
-    if((this.field[key].user !== this.field[this.holdingValue].user) && (this.field[key].user !== 0))  return false;
+    //if((this.field[key].user !== this.field[this.holdingValue].user) && (this.field[key].user !== 0))  return false;
 
-    return true;
-/*
-    let val = this.remainingMoves.find(e => e === (key-this.holdingValue));
+    if((this.field[key].user !== this.field[this.holdingValue].user) && (this.field[key].user !== 0))
+    {
+      if(this.field[key].value > 1) return false;
+      else willGraveFill = true;
+    }  
 
-    if(val === undefined)  return false;
+    let index = this.userOrder ? (this.holdingValue-key) : (key-this.holdingValue); 
+    let val = this.remainingMoves.indexOf(index);
+
+    if(val === -1)  return false;
     else 
     {
-      this.remainingMoves.pop(val);
+      if(willGraveFill)
+      {
+        this.grave[this.field[key].user - 1]++;
+        this.field[key].user = 0;
+        this.field[key].value = 0;
+      }
+      this.remainingMoves.splice(val,1);
       return true
     }
-    */
+    
+  }
+
+  getDiceUrl(val : number) : string
+  {
+    return "assets/img/dice_"+val+".png";
+  }
+
+  showGrave()
+  {
+    return this.grave[0] + this.grave[1] > 0;
+  }
+
+  doItemHavePlus(val1 : number , val2 : number , swtch : boolean)
+  {
+    let key = this.calculateKey(val1 , val2  , swtch);
+
+    if(this.field[key].value > 5)
+    {
+      return "+"+(this.field[key].value - 5);
+    }
+    else return "";
   }
 }
 

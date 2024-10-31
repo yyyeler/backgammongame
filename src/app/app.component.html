@@ -2,33 +2,44 @@
   <div class="row header pt-3 pb-2">
     <div class="offset-1 col-3">
       <div class="row">
-        <div class="col-6 alignLeft">
-          <button class="btn btn-danger" style="height:48px" (click)="shakeDice()">Shake Dice</button>
-        </div>
-        <div class="col-3 alignRight">
-          <img [src]="imageSrc1" width="48"/>
-        </div>
-        <div class="col-3 alignLeft">
-          <img [src]="imageSrc2" width="48"/>
+        <div class="col-6 userBox text-center">
+          User {{ userOrder?"1":"2" }}
         </div>
       </div>
     </div>
     <div class="col-4 title text-center">
       <h2>{{ title }}</h2>
     </div>
-    <div class="col-3">
+    <div class=" col-3">
       <div class="row">
-        <div class="col-6 pt-2 text-center">
-          <h4 class="title">User {{ userOrder?"1":"2" }}</h4>
+        <div class="col-3 alignRight">
+          <img [src]="imageSrc1" width="48"/>
+        </div>
+        <div class="col-3 alignLeft">
+          <img [src]="imageSrc2" width="48"/>
         </div>
         <div class="col-6 alignRight">
-          <button class="btn btn-primary" style="height:48px" (click)="finishMoves()">Finish Moves</button>
+          <button class="btn btn-danger" [disabled]="!remainDice" style="height:48px" (click)="shakeDice()">Shake Dice</button>
         </div>
       </div>
     </div>
   </div>
   <div class="row body">
-    <div class="offset-1 col-10"> 
+    <div class="col-1">
+      <div *ngIf="showGrave()" class="row mb-1">
+        <div class="offset-1 col-10 remainMoves text-center">
+         Grave
+        </div>
+      </div>
+      <ng-container *ngFor="let move of grave; index as i">
+        <div *ngIf="move !== 0" class="row">
+          <div class="offset-1 col-10 graveCell text-center p-1 mb-1" [ngClass]="i == 0?'yellowCoin':'blueCoin'">
+            {{ move }}
+          </div>
+        </div>
+      </ng-container>
+    </div>
+    <div class="col-10"> 
       <div class="row">
         <ng-container *ngFor="let item1 of btw2">
           <div class="col-6 gameBoard">
@@ -37,6 +48,7 @@
                 <div class="col-2 bgReverse" [ngClass]="{'bgBlack': item2 % 2 == 0 ,'bgWhite': item2 % 2 == 1}" (click)="makeMove(item1,item2,true)">
                   <ng-container *ngFor="let item3 of btw5">
                     <div class="row coinRow" [ngClass]="checkField(item1,item2,item3,true)">
+                      {{ item3 !== 1 ? '' : doItemHavePlus(item1,item2,true) }}
                     </div>
                   </ng-container>
                 </div>
@@ -49,7 +61,7 @@
               <ng-container *ngFor="let item2 of btw6">
                 <div class="col-2" [ngClass]="{'bgBlack': item2 % 2 == 1 ,'bgWhite': item2 % 2 == 0}" (click)="makeMove(item1,item2,false)">
                   <ng-container *ngFor="let item3 of btw5">
-                    <div class="row coinRow"  [ngClass]="checkField(item1,item2,item3,false)">
+                    <div class="row coinRow" [ngClass]="checkField(item1,item2,item3,false)">
                     </div>
                   </ng-container>
                 </div>
@@ -58,5 +70,19 @@
           </div>
         </ng-container>
       </div>
+    </div>
+    <div class="col-1">
+        <div *ngIf="!remainDice" class="row mb-1">
+          <div class="offset-1 col-10 remainMoves text-center">
+           Remaining Moves
+          </div>
+        </div>
+        <ng-container *ngFor="let move of remainingMoves">
+          <div class="row">
+            <div class="offset-1 col-10 remainMoves text-center p-1 mb-1">
+              <img [src]="getDiceUrl(move)" width="48"/>
+            </div>
+          </div>
+        </ng-container>
     </div>
 </div>

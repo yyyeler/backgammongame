@@ -56,6 +56,9 @@
     height: 4rem;
     width: 4rem;
     margin: 0;
+    align-content: space-evenly;
+    display: block;
+    text-align: center;
 }
 
 .yellowCoin
@@ -89,4 +92,33 @@
     border-radius: 20px;
     background-color: burlywood;
     margin-bottom: 0.25rem;
+}
+
+.userBox
+{
+    border-radius: 10px;
+    background-color: #471900;
+    color: white;
+    padding: 0.5rem 0;    
+    height: 3rem;
+    font-size: larger;
+    width: 8rem;
+}
+
+.remainMoves
+{
+    border: 2px solid black;
+    border-radius: 10px;
+    color: #471900;
+    background-color: burlywood;
+    font-size: 0.9rem;
+}
+
+.graveCell
+{
+    background-repeat: round;
+    height: 4rem;
+    width: 4rem;
+    margin-left: 1.4rem;
+    align-content: space-evenly;
 }
