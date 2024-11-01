@@ -122,3 +122,9 @@
     margin-left: 1.4rem;
     align-content: space-evenly;
 }
+
+.titleCoin {
+    width: 2rem;
+    height: 2rem;
+    background-repeat: round;
+}
