@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, Type } from '@angular/core';
+import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import * as alertifyjs from 'alertifyjs';
 
 @Component({
   selector: 'app-root',
@@ -22,11 +23,9 @@ export class AppComponent {
   remainingMoves : number[] = []; 
   holdingValue : number = -1;
   grave : number[] = [0,0];
+  finished : number[] = [0,0];
 
-  field : Field[]= [{value : 2,user : 2},{value : 0,user : 0},{value : 0,user : 0},{value : 0,user : 0},{value : 0,user : 0},{value : 5,user : 1},
-                    {value : 0,user : 0},{value : 3,user : 1},{value : 0,user : 0},{value : 0,user : 0},{value : 0,user : 0},{value : 5,user : 2},
-                    {value : 5,user : 1},{value : 0,user : 0},{value : 0,user : 0},{value : 0,user : 0},{value : 3,user : 2},{value : 0,user : 0},
-                    {value : 5,user : 2},{value : 0,user : 0},{value : 0,user : 0},{value : 0,user : 0},{value : 0,user : 0},{value : 2,user : 1}];               
+  field : Field[]= this.getInitialField();            
 
   shakeDice()
   {
@@ -40,6 +39,9 @@ export class AppComponent {
     this.imageSrc2 = this.getDiceUrl(dice2);
 
     this.remainDice = false;
+
+    console.log(this.grave);
+    this.checkGrave();  
   }
 
   checkField(val1 : number , val2 : number , val3 : number ,swtch : boolean) : string
@@ -66,6 +68,7 @@ export class AppComponent {
 
   finishMoves()
   {
+    this.remainingMoves = [];
     this.userOrder = !this.userOrder;
     this.remainDice = true;
     this.holdingValue = -1;
@@ -73,14 +76,23 @@ export class AppComponent {
 
   makeMove(val1 : number, val2 : number, swtch : boolean)
   {
-    if(this.remainDice) alert("Shake dice first !!!");
+    if(this.remainDice)  alertifyjs.error('Shake dice first !');
     else
     {
       let key = this.calculateKey(val1 , val2  , swtch);
       
-      if(this.holdingValue === -1) this.holdingValue = key;
+      if(this.holdingValue === -1)
+      {
+        if((this.userOrder && this.field[key].user === 1) || (!this.userOrder && this.field[key].user === 2))
+        {
+          this.field[key].holdingLight = true;
+          this.holdingValue = key;
+        } 
+        else alertifyjs.error("It is User "+(this.userOrder?"1":"2")+"'s turn!");
+      } 
       else 
       {
+        this.field[this.holdingValue].holdingLight = false;
         if(this.checkIsValid(key))
         {
           this.field[this.holdingValue].value--;
@@ -92,10 +104,12 @@ export class AppComponent {
         else
         {
           this.holdingValue = -1;
-          alert("Move is not valid!");
+          alertifyjs.error("Move is not valid!");
         }
       }
-  
+
+      this.checkGameIsFinished();
+
       if(this.remainingMoves.length == 0)  this.finishMoves();
     }  
   }
@@ -127,7 +141,8 @@ export class AppComponent {
   checkIsValid(key : number) : boolean
   {
     let willGraveFill : boolean = false;
-    let swtch = (key >= this.holdingValue && this.userOrder) || (key <= this.holdingValue && !this.userOrder);
+    let swtch = (key >= this.holdingValue && (this.userOrder || this.field[this.holdingValue].user == 1)) || (key <= this.holdingValue && (!this.userOrder || this.field[this.holdingValue].user == 2));
+    
     if(swtch) return false;
     if(this.field[this.holdingValue].value === 0) return false;
     //if((this.field[key].user !== this.field[this.holdingValue].user) && (this.field[key].user !== 0))  return false;
@@ -156,25 +171,76 @@ export class AppComponent {
     
   }
 
-  getDiceUrl(val : number) : string
-  {
-    return "assets/img/dice_"+val+".png";
-  }
-
-  showGrave()
-  {
-    return this.grave[0] + this.grave[1] > 0;
-  }
+  getDiceUrl(val : number) : string { return "assets/img/dice_"+val+".png";  }
+  showGraveOrFinishedTable(isGrave : boolean) { return isGrave ? (this.grave[0] + this.grave[1]) > 0 : (this.finished[0] + this.finished[1]); }
 
   doItemHavePlus(val1 : number , val2 : number , swtch : boolean)
   {
     let key = this.calculateKey(val1 , val2  , swtch);
-
-    if(this.field[key].value > 5)
-    {
-      return "+"+(this.field[key].value - 5);
-    }
+    
+    if(this.field[key].value > 5) return "+"+(this.field[key].value - 5);
     else return "";
+  }
+
+  checkGrave()
+  {
+    let graveValue = this.userOrder ? this.grave[0] : this.grave[1];
+    if(graveValue !== 0) this.checkCanPlay(); 
+  }
+
+  checkCanPlay()
+  {
+    let value;
+
+    if(this.userOrder)  value = this.remainingMoves.find(i => ((this.field[24-i].user == 0) || (this.field[24-i].user == 1) || (this.field[24-i].user == 2 && this.field[24-i].value == 1))) === undefined;
+    else                value = this.remainingMoves.find(i => ((this.field[i-1].user == 0) || (this.field[i-1].user == 2) || (this.field[i-1].user == 1 && this.field[i-1].value == 1))) === undefined;
+
+    if(value) 
+    {
+      this.finishMoves();
+      alertifyjs.error("You can not put chip in the grave to field !");
+    }
+  }
+
+  getInitialField() : Field[]
+  {
+    return [{value : 2,user : 2, holdingLight: false, canGoLight : false},
+            {value : 0,user : 0, holdingLight: false, canGoLight : false},
+            {value : 0,user : 0, holdingLight: false, canGoLight : false},
+            {value : 0,user : 0, holdingLight: false, canGoLight : false},
+            {value : 0,user : 0, holdingLight: false, canGoLight : false},
+            {value : 5,user : 1, holdingLight: false, canGoLight : false},
+            {value : 0,user : 0, holdingLight: false, canGoLight : false},
+            {value : 3,user : 1, holdingLight: false, canGoLight : false},
+            {value : 0,user : 0, holdingLight: false, canGoLight : false},
+            {value : 0,user : 0, holdingLight: false, canGoLight : false},
+            {value : 0,user : 0, holdingLight: false, canGoLight : false},
+            {value : 5,user : 2, holdingLight: false, canGoLight : false},
+            {value : 5,user : 1, holdingLight: false, canGoLight : false},
+            {value : 0,user : 0, holdingLight: false, canGoLight : false},
+            {value : 0,user : 0, holdingLight: false, canGoLight : false},
+            {value : 0,user : 0, holdingLight: false, canGoLight : false},
+            {value : 3,user : 2, holdingLight: false, canGoLight : false},
+            {value : 0,user : 0, holdingLight: false, canGoLight : false},
+            {value : 5,user : 2, holdingLight: false, canGoLight : false},
+            {value : 0,user : 0, holdingLight: false, canGoLight : false},
+            {value : 0,user : 0, holdingLight: false, canGoLight : false},
+            {value : 0,user : 0, holdingLight: false, canGoLight : false},
+            {value : 0,user : 0, holdingLight: false, canGoLight : false},
+            {value : 2,user : 1, holdingLight: false, canGoLight : false}
+          ];   
+  }
+
+  checkHoldingLight(val1 : number,val2 : number ,swtch : boolean)
+  {
+    let key = this.calculateKey(val1 , val2  , swtch);
+    return this.field[key].holdingLight;
+  }
+
+  checkGameIsFinished()
+  {
+    if(this.finished[0] == 15) alertifyjs.success('!!! User 1 is won !!!');
+    else if(this.finished[1] == 15) alertifyjs.success('!!! User 2 is won !!!');
   }
 }
 
@@ -182,4 +248,6 @@ export type Field =
 {
   value : number;
   user : number;
+  holdingLight : boolean;
+  canGoLight : boolean;
 } 
