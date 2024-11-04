@@ -24,7 +24,7 @@
       </div>
     </div>
   </div>
-  <div class="row body">
+  <div class="row body" [@rotateAnimation]="!userOrder?'trueState':'falseState'">
     <div class="col-1">
 
     <div *ngIf="!remainDice" class="row mb-1">
@@ -56,7 +56,7 @@
               </ng-container>
             </div>
             <div class="row text-center"> 
-              <div class="brandString">{{ brandString }} </div>
+              <div class="brandString" [@rotateAnimation]="!userOrder?'trueState':'falseState'">{{ brandString }} </div>
             </div>
             <div class="row gameField">
               <ng-container *ngFor="let item2 of btw6">
@@ -76,7 +76,7 @@
     <div class="col-1">
       <div class="row">
         <div class="offset-1 col-10 finishField" [ngClass]="checkRightFieldIsHolding(true)" (click)="makeMove(-1,-1,false,true)">
-            <div class="row coinRow graveAndFinish" [ngClass]="checkRightField(true)">
+            <div class="row coinRow graveAndFinish" [ngClass]="checkRightField(true)" [@rotateAnimation]="!userOrder?'trueState':'falseState'">
               {{ checkRightFieldValue(true) }}
             </div>
         </div>
@@ -84,13 +84,13 @@
       <div class="row">
         <div class="offset-1 col-10 finishFieldGap">
           <div class="row finishFieldTitle">
-            <div class="col-12">
+            <div class="col-12" [@rotateAnimation]="!userOrder?'trueState':'falseState'">
               {{ userOrder ? "Grave" : "Finish" }} 
             </div>
           </div>
           <div class="row finishFieldTitleGap"> </div>
           <div class="row finishFieldTitle"> 
-            <div class="col-12">
+            <div class="col-12" [@rotateAnimation]="!userOrder?'trueState':'falseState'">
               {{ userOrder ? "Finish" : "Grave" }}  
             </div>
           </div>
@@ -98,7 +98,7 @@
       </div>
       <div class="row">
         <div class="offset-1 col-10 finishField" [ngClass]="checkRightFieldIsHolding(false)" (click)="makeMove(-1,-1,false,true)">
-          <div class="row coinRow graveAndFinish" [ngClass]="checkRightField(false)">
+          <div class="row coinRow graveAndFinish" [ngClass]="checkRightField(false)" [@rotateAnimation]="!userOrder?'trueState':'falseState'">
             {{ checkRightFieldValue(false) }}
           </div>
         </div>
@@ -106,27 +106,7 @@
     </div>
 </div>
 
-<!--
-<p-button (onClick)="showDialog()" label="Show" />
-<p-dialog header="Edit Profile" [modal]="true" [(visible)]="visible" [style]="{ width: '25rem' }">
-    <span class="p-text-secondary block mb-5">Update your information.</span>
-    <div class="flex align-items-center gap-3 mb-3">
-        <label for="username" class="font-semibold w-6rem">Username</label>
-        <input pInputText id="username" class="flex-auto" autocomplete="off" />
-    </div>
-    <div class="flex align-items-center gap-3 mb-5">
-        <label for="email" class="font-semibold w-6rem">Email</label>
-        <input pInputText id="email" class="flex-auto" autocomplete="off" />
-    </div>
-    <div class="flex justify-content-end gap-2">
-        <p-button label="Cancel" severity="secondary" (onClick)="visible = false" />
-        <p-button label="Save" (onClick)="visible = false" />
-    </div>
-</p-dialog>
-
--->
-
-<p-dialog [modal]="true" header="Game Result" [(visible)]="isGameFinised" [style]="{ width: '25rem' }">
+<p-dialog styleClass="dialogBox" [modal]="true" header="Game Result" [(visible)]="isGameFinised" [style]="{ width: '25rem' }">
   <div class="flex align-items-center gap-3 mb-5 mt-4">
     <h3 class="text-center">User {{ finished[0] == 15?1:2 }} Won</h3>
   </div>

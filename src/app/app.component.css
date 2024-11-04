@@ -176,3 +176,13 @@
 {
     text-align: end;
 }
+
+.dialogBox
+{    
+    background-color: #471900;
+    color: white;
+}
+
+.reflectDiv {
+    -webkit-box-reflect: below;
+  }

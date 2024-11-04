@@ -3,13 +3,21 @@ import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import * as alertifyjs from 'alertifyjs';
 import { DialogModule } from 'primeng/dialog';
+import { trigger, state, style, animate, transition } from '@angular/animations';
 
 @Component({
   selector: 'app-root',
   standalone: true,
   imports: [RouterOutlet, CommonModule, DialogModule],
   templateUrl: './app.component.html',
-  styleUrl: './app.component.css'
+  styleUrl: './app.component.css',
+  animations: [
+    trigger('rotateAnimation', [
+      state('falseState', style({ transform: 'rotate(0deg)' })),
+      state('trueState', style({ transform: 'rotate(180deg)' })),
+      transition('falseState => trueState', animate('0.5s ease-out'))
+    ])
+  ]
 })
 export class AppComponent {
   title = 'Backgammon Game';
