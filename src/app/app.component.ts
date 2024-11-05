@@ -15,7 +15,8 @@ import { trigger, state, style, animate, transition } from '@angular/animations'
     trigger('rotateAnimation', [
       state('falseState', style({ transform: 'rotate(0deg)' })),
       state('trueState', style({ transform: 'rotate(180deg)' })),
-      transition('falseState => trueState', animate('0.5s ease-out'))
+      transition('falseState => trueState', animate('0.5s ease-out')),
+      transition('trueState => falseState', animate('0.5s ease-out'))
     ])
   ]
 })
