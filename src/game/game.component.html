@@ -1,0 +1,118 @@
+<div class="container">
+    <div class="row header pt-3 pb-2">
+      <div class="offset-1 col-3">
+        <div class="row">
+          <div class="col-6">
+            <a routerLink="">
+              <img src="../assets/img/back.png" height="48"/>
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="col-4 title text-center">
+        <h2>User {{ userOrder?"1":"2" }}</h2>
+      </div>
+      <div class=" col-3">
+        <div class="row">
+          <div class="col-3 alignRight">
+            <img [src]="imageSrc1" width="48"/>
+          </div>
+          <div class="col-3 alignLeft">
+            <img [src]="imageSrc2" width="48"/>
+          </div>
+          <div class="col-6 alignRight">
+            <button class="btn btn-danger" [disabled]="!remainDice" style="height:48px" (click)="shakeDice()">Shake Dice</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row body" [@rotateAnimation]="!userOrder?'trueState':'falseState'">
+      <div class="col-1" [ngClass]=" {'reflectDiv' : !userOrder} ">
+  
+      <div *ngIf="!remainDice" class="row mb-1">
+        <div class="offset-1 col-10 remainMoves text-center">
+          Remaining Moves
+        </div>
+      </div>
+      <ng-container *ngFor="let move of remainingMoves">
+        <div class="row">
+          <div class="offset-1 col-10 remainMoves text-center p-1 mb-1">
+            <img [src]="getDiceUrl(move)" width="48"/>
+          </div>
+        </div>
+      </ng-container>
+      </div>
+      <div class="col-10"> 
+        <div class="row">
+          <ng-container *ngFor="let item1 of btw2">
+            <div class="col-6 gameBoard">
+              <div class="row gameField">
+                <ng-container *ngFor="let item2 of btw6">
+                  <div class="col-2 bgReverse" [ngClass]="{'bgBlack': item2 % 2 == 0 ,'bgWhite': item2 % 2 == 1,'holdingLight': checkHoldingLight(item1,item2,true)}" (click)="makeMove(item1,item2,true,false)">
+                    <ng-container *ngFor="let item3 of btw5">
+                      <div class="row coinRow" [ngClass]="checkField(item1,item2,item3,true)">
+                        {{ item3 !== 1 ? '' : doItemHavePlus(item1,item2,true) }}
+                      </div>
+                    </ng-container>
+                  </div>
+                </ng-container>
+              </div>
+              <div class="row text-center"> 
+                <div class="brandString" [@rotateAnimation]="!userOrder?'trueState':'falseState'">{{ brandString }} </div>
+              </div>
+              <div class="row gameField">
+                <ng-container *ngFor="let item2 of btw6">
+                  <div class="col-2" [ngClass]="{'bgBlack': item2 % 2 == 1 ,'bgWhite': item2 % 2 == 0,'holdingLight': checkHoldingLight(item1,item2,false)}" (click)="makeMove(item1,item2,false,false)">
+                    <ng-container *ngFor="let item3 of btw5">
+                      <div class="row coinRow" [ngClass]="checkField(item1,item2,item3,false)">
+                        {{ item3 !== 1 ? '' : doItemHavePlus(item1,item2,false) }}
+                      </div>
+                    </ng-container>
+                  </div>
+                </ng-container>
+              </div>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+      <div class="col-1">
+        <div class="row">
+          <div class="offset-1 col-10 finishField" [ngClass]="checkRightFieldIsHolding(true)" (click)="makeMove(-1,-1,false,true)">
+              <div class="row coinRow graveAndFinish" [ngClass]="checkRightField(true)" [@rotateAnimation]="!userOrder?'trueState':'falseState'">
+                {{ checkRightFieldValue(true) }}
+              </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="offset-1 col-10 finishFieldGap">
+            <div class="row finishFieldTitle">
+              <div class="col-12" [@rotateAnimation]="!userOrder?'trueState':'falseState'">
+                {{ userOrder ? "Grave" : "Finish" }} 
+              </div>
+            </div>
+            <div class="row finishFieldTitleGap"> </div>
+            <div class="row finishFieldTitle"> 
+              <div class="col-12" [@rotateAnimation]="!userOrder?'trueState':'falseState'">
+                {{ userOrder ? "Finish" : "Grave" }}  
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="offset-1 col-10 finishField" [ngClass]="checkRightFieldIsHolding(false)" (click)="makeMove(-1,-1,false,true)">
+            <div class="row coinRow graveAndFinish" [ngClass]="checkRightField(false)" [@rotateAnimation]="!userOrder?'trueState':'falseState'">
+              {{ checkRightFieldValue(false) }}
+            </div>
+          </div>
+        </div>
+      </div>
+  </div>
+  
+  <p-dialog [modal]="true" header="Game Result" [(visible)]="isGameFinised" [style]="{ width: '25rem' }">
+    <div class="flex align-items-center gap-3 mb-5 mt-4">
+      <h3 class="text-center">User {{ finished[0] == 15?1:2 }} Won</h3>
+    </div>
+    <div class="flex justify-content-end gap-2 dialogButton">
+        <button class="btn btn-primary" (click)="newGame()">Play Again</button>
+    </div>
+  </p-dialog>

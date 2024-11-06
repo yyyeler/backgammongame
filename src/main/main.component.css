@@ -1,0 +1,44 @@
+
+.container
+{
+    background-color: burlywood !important;
+    padding: 5rem;
+    margin-top: 2rem;
+    border-radius: 20px;
+    border: 5px solid #471900;
+}
+
+.optionsDiv
+{
+    text-align: center;
+}
+
+.titleDivMain
+{
+    background-color:antiquewhite;
+    border-radius: 10px;
+    padding: 1rem;
+    border: 5px solid #471900;
+    margin-bottom: 0.5rem;
+    font-size: larger;
+    font-weight: 500;
+}
+
+.titleDivMainEven
+{
+    background-color:antiquewhite;
+    border: 5px solid #471900;
+}
+
+
+.titleDivMainOdd
+{
+    background-color: #471900;
+    border: antiquewhite 5px solid;
+    color: antiquewhite;
+}
+
+.titleDivMainHover :hover
+{
+    font-weight: 700;
+}
