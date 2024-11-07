@@ -42,3 +42,10 @@
 {
     font-weight: 700;
 }
+
+.logoImg
+{
+    height: 15rem;
+    width: 15rem;
+    margin: auto;
+}

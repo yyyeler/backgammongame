@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
-import { RouterModule, RouterOutlet } from '@angular/router';
+import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute, RouterModule, RouterOutlet } from '@angular/router';
 import * as alertifyjs from 'alertifyjs';
 import { DialogModule } from 'primeng/dialog';
 import { trigger, state, style, animate, transition } from '@angular/animations';
@@ -20,7 +20,7 @@ import { trigger, state, style, animate, transition } from '@angular/animations'
     ])
   ]
 })
-export class GameComponent {
+export class GameComponent implements OnInit {
   title = 'Backgammon Game';
   btw2 : number []= [0,1];
   btw6 : number []= [1,2,3,4,5,6];
@@ -34,9 +34,19 @@ export class GameComponent {
   holdingValue : number = -2;
   grave : number[] = [0,0];
   finished : number[] = [0,0];
+  field : Field[] = [];
+  gameType : string | null = null;
   isGameFinised = false;
 
-  field : Field[]= this.getInitialField();            
+  
+  constructor(private route: ActivatedRoute) {}
+
+  ngOnInit()
+  {
+    this.field = this.getInitialField();    
+    this.gameType = this.route.snapshot.paramMap.get('type');
+    console.log(this.gameType);
+  }
 
   shakeDice()
   {
@@ -82,6 +92,8 @@ export class GameComponent {
     this.userOrder = !this.userOrder;
     this.remainDice = true;
     this.holdingValue = -2;
+
+    if(!this.userOrder && this.gameType == 'pc') this.pcPlays();
   }
 
   makeMove(val1 : number, val2 : number, swtch : boolean , comeToGrave : boolean)
@@ -311,7 +323,7 @@ export class GameComponent {
     if(value) 
     {
       this.finishMoves();
-      alertifyjs.error("You can not put chip in the grave to field !");
+      if(this.gameType == 'local') alertifyjs.error("You can not put chip in the grave to field !");
     }
   }
 
@@ -436,6 +448,116 @@ export class GameComponent {
   newGame()
   {
     window.location.reload();    
+  }
+
+  pcPlays() 
+  {
+    this.shakeDice();
+    //setTimeout(1000);
+    this.checkGrave();
+    if(this.grave[1] >= this.remainingMoves.length) this.saveFromGraveAll();
+    else if(this.grave[1] > 0) 
+    {
+      this.saveFromGraveAll();
+      if(this.remainingMoves.length > 0) this.playRemainMoves();
+    }
+    else 
+    {
+      this.playRemainMoves();
+    }
+
+    this.finishMoves();
+  }
+
+  saveFromGraveAll()
+  {
+    let usedMoves : number[] = [];
+    this.remainingMoves.forEach(x => {
+      if([0,2].includes(this.field[24-x].user))
+      {
+        this.grave[1]--;
+        this.field[24-x].user = 2;
+        this.field[24-x].value ++;
+        usedMoves.push(x);
+      }
+    });
+
+    usedMoves.forEach(i => {
+      this.remainingMoves.splice(this.remainingMoves.findIndex(x => x == i),1);
+    });
+  }
+ 
+  playRemainMoves()
+  {
+    this.breakOppLosePer();
+    if(this.remainingMoves.length > 0) this.losePoorPer();
+    if(this.remainingMoves.length > 0) this.tryToStayAllPerRich();
+  }
+
+  breakOppLosePer()
+  {
+    let poorPer : number [] = [];
+    this.field.forEach((x,i) => {
+      if(x.user == 1 && x.value == 1 )  poorPer.push(i);
+    });
+
+    if(poorPer.length > 0) this.killOppPoorPer(poorPer);
+  }
+
+  killOppPoorPer(poorPer : number[])
+  {
+    let remainingMovesDeleted = [];
+    this.remainingMoves.forEach((x,i) => {
+      if(poorPer.length > 0)
+      {
+        let key = poorPer.findIndex(y => y+x <= 23 && this.field[y+x].user == 1);
+        if(key !== undefined) 
+        {
+          this.field[poorPer[key]+x].value = 1;
+          this.field[poorPer[key]+x].user = 2;
+          this.field[poorPer[key]].value--;
+          remainingMovesDeleted.push(i);
+        }
+      }
+      
+      remainingMovesDeleted.forEach(a => this.remainingMoves.splice(a,1));
+    });
+  }
+
+  losePoorPer()
+  {
+    let poorPer : number [] = [];
+    this.field.forEach((x,i) => {
+      if(x.user == 2 && x.value == 1 )  poorPer.push(i);
+    });
+
+    if(poorPer.length > 0) this.makeRichPer(poorPer);
+  }
+
+  makeRichPer(poorPer : number[])
+  {
+    let remainingMovesDeleted = [];
+    this.remainingMoves.forEach((x,i) => {
+      if(poorPer.length > 0)
+      {
+        let key = poorPer.findIndex(y => y+x <= 23 && this.field[y+x].user == 2);
+        if(key !== undefined) 
+        {
+          this.field[poorPer[key]+x].value++;
+          this.field[poorPer[key]].value--;
+          remainingMovesDeleted.push(i);
+        }
+      }
+      
+      remainingMovesDeleted.forEach(a => this.remainingMoves.splice(a,1));
+    });
+  }
+
+  tryToStayAllPerRich()
+  {
+    //let richPers : number[] = this.field.filter(x => x.user==2 && x.value>1);
+
+
   }
 }
 
