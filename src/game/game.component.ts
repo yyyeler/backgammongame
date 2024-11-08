@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, RouterModule, RouterOutlet } from '@angular/router';
+import { ActivatedRoute, RouterModule } from '@angular/router';
 import * as alertifyjs from 'alertifyjs';
 import { DialogModule } from 'primeng/dialog';
 import { trigger, state, style, animate, transition } from '@angular/animations';
@@ -35,8 +35,10 @@ export class GameComponent implements OnInit {
   grave : number[] = [0,0];
   finished : number[] = [0,0];
   field : Field[] = [];
+  winTitles : string[] = [];
   gameType : string | null = null;
   isGameFinised = false;
+  soundSwitch = true;
 
   
   constructor(private route: ActivatedRoute) {}
@@ -45,10 +47,12 @@ export class GameComponent implements OnInit {
   {
     this.field = this.getInitialField();    
     this.gameType = this.route.snapshot.paramMap.get('type');
-    console.log(this.gameType);
+
+    if(this.gameType == "pc") this.winTitles = ["You won","You lost"];
+    else this.winTitles = ["User 1 won","User 2 won"];
   }
 
-  shakeDice()
+  async shakeDice()
   {
     let dice1 = Math.floor(Math.random() * 6)+1;
     let dice2 = Math.floor(Math.random() * 6)+1;
@@ -56,11 +60,15 @@ export class GameComponent implements OnInit {
     if(dice1 === dice2) this.remainingMoves = [dice1,dice1,dice1,dice1];
     else this.remainingMoves = [dice1,dice2];
 
+    this.remainDice = false;
+
+    this.playAudio("dice");
+    await this.diceAnimation();
+
     this.imageSrc1 = this.getDiceUrl(dice1);
     this.imageSrc2 = this.getDiceUrl(dice2);
 
-    this.remainDice = false;
-
+    
     this.checkGrave();  
   }
 
@@ -93,19 +101,25 @@ export class GameComponent implements OnInit {
     this.remainDice = true;
     this.holdingValue = -2;
 
+    if(this.gameType == 'local') this.playAudio("slide"); 
     if(!this.userOrder && this.gameType == 'pc') this.pcPlays();
   }
 
   makeMove(val1 : number, val2 : number, swtch : boolean , comeToGrave : boolean)
   {
-    
-    if(this.remainDice)  alertifyjs.error('Shake dice first !');
+    if(this.holdingValue === -2) this.playAudio("select");
+    if(this.remainDice)
+    {
+      this.playAudio("error"); 
+      alertifyjs.error('Shake dice first !');
+    }  
     else
     {
       let key = this.calculateKey(val1 , val2  , swtch);
 
       if(((this.userOrder && this.grave[0] > 0) || (!this.userOrder && this.grave[1] > 0)) && !(comeToGrave || this.holdingValue == -1 || this.holdingValue == 24)) 
       {
+        this.playAudio("error"); 
         alertifyjs.error("You should put coin from the grave to field first !");
         return;
       }
@@ -117,6 +131,7 @@ export class GameComponent implements OnInit {
           if((this.userOrder && this.grave[0]>0) || (!this.userOrder && this.grave[1]>0)) this.holdingValue = this.userOrder ? 24 : -1; 
           else
           {
+            this.playAudio("error"); 
             alertifyjs.error("Grave is empty!");
             return;
           } 
@@ -126,7 +141,11 @@ export class GameComponent implements OnInit {
           this.field[key].holdingLight = true;
           this.holdingValue = key;
         } 
-        else alertifyjs.error("It is User "+(this.userOrder?"1":"2")+"'s turn!");
+        else
+        {
+          this.playAudio("error"); 
+          alertifyjs.error("It is User "+(this.userOrder?"1":"2")+"'s turn!");
+        } 
       } 
       else 
       {
@@ -231,6 +250,7 @@ export class GameComponent implements OnInit {
         this.field[key].value = 0;
       }
       this.remainingMoves.splice(val,1);
+      this.playAudio("coin");
       return true
     }
     
@@ -270,6 +290,7 @@ export class GameComponent implements OnInit {
         this.field[key].value = 0;
       }
       this.remainingMoves.splice(val,1);
+      this.playAudio("coin");
       return true
     }
   }
@@ -293,6 +314,7 @@ export class GameComponent implements OnInit {
     else return false;
 
     this.remainingMoves.splice(val,1);
+    this.playAudio("coin");
     return true;
   }
 
@@ -364,7 +386,12 @@ export class GameComponent implements OnInit {
 
   checkGameIsFinished()
   {
-    if(this.finished[0] == 15 || this.finished[1] == 15) this.isGameFinised = true;
+    if(this.finished[0] == 15 || this.finished[1] == 15) 
+    {
+      this.isGameFinised = true;
+      if(this.gameType == "pc" && this.finished[1] == 15) this.playAudio("lost");
+      else this.playAudio("win");
+    }
   }
 
   checkRightField(swtch : boolean) : string
@@ -442,6 +469,7 @@ export class GameComponent implements OnInit {
   notValidAlert()
   {
     this.holdingValue = -2;
+    this.playAudio("error"); 
     alertifyjs.error("Move is not valid!");
   }
 
@@ -453,7 +481,6 @@ export class GameComponent implements OnInit {
   pcPlays() 
   {
     this.shakeDice();
-    console.log(this.remainingMoves);
 
     this.checkGrave();
     if(this.grave[1] >= this.remainingMoves.length) this.saveFromGraveAll();
@@ -474,11 +501,11 @@ export class GameComponent implements OnInit {
   {
     let usedMoves : number[] = [];
     this.remainingMoves.forEach(x => {
-      if([0,2].includes(this.field[24-x].user))
+      if([0,2].includes(this.field[x-1].user) && this.grave[1] > 0)
       {
         this.grave[1]--;
-        this.field[24-x].user = 2;
-        this.field[24-x].value ++;
+        this.field[x-1].user = 2;
+        this.field[x-1].value ++;
         usedMoves.push(x);
       }
     });
@@ -609,7 +636,6 @@ export class GameComponent implements OnInit {
 
   makeWorseMove()
   {
-    debugger;
     this.remainingMoves.forEach(a => {
       let key = this.field.findIndex((x,i) => x.user == 2 && (this.field[i+a].user !== 1 || this.field[i+a].value < 2));
       if(key !== -1)
@@ -623,6 +649,41 @@ export class GameComponent implements OnInit {
 
     this.remainingMoves = [];
   }
+
+  playAudio(sound : string){
+    if(this.soundSwitch)
+    {
+      let audio = new Audio();
+      audio.src = "../assets/audio/"+sound+".mp3";
+      audio.load();
+      audio.play();  
+    }
+  }
+
+  diceAnimation(): Promise<void> {
+    return new Promise((resolve) => {
+      for (let i = 0; i < 25; i++) {
+        setTimeout(() => {
+          this.imageSrc1 = this.getDiceUrl((i % 6) + 1);
+          this.imageSrc2 = this.getDiceUrl(((18 - i) % 6) + 1);
+  
+          if (i === 24) {
+            resolve();
+          }
+        }, i * 10); 
+      }
+    });
+  }
+
+  changeSound()
+  {
+    this.soundSwitch = !this.soundSwitch;
+  }
+
+  getSoundImg()
+  {
+    return "../assets/img/" +(this.soundSwitch?"sound":"mute")+".png";
+  }
 }
 
 export type Field =
@@ -631,3 +692,5 @@ export type Field =
   user : number;
   holdingLight : boolean;
 } 
+
+
