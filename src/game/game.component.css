@@ -88,7 +88,7 @@
 
 .header
 {
-    border: 3px solid black;
+    border: 3px solid #471900;
     border-radius: 20px;
     background-color: burlywood;
     margin-bottom: 0.25rem;
@@ -96,7 +96,7 @@
 
 .remainMoves
 {
-    border: 2px solid black;
+    border: 2px solid #471900;
     border-radius: 10px;
     color: #471900;
     background-color: burlywood;

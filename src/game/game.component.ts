@@ -8,7 +8,7 @@ import { trigger, state, style, animate, transition } from '@angular/animations'
 @Component({
   selector: 'game',
   standalone: true,
-  imports: [RouterOutlet, CommonModule, DialogModule,RouterModule],
+  imports: [CommonModule, DialogModule,RouterModule],
   templateUrl: './game.component.html',
   styleUrl: './game.component.css',
   animations: [
@@ -288,7 +288,7 @@ export class GameComponent implements OnInit {
 
     let index = this.userOrder ? (this.holdingValue-key) : (key-this.holdingValue); 
     let val :number;
-    if(this.remainingMoves.indexOf(index) === -1) val = this.remainingMoves.indexOf(index);
+    if(this.remainingMoves.indexOf(index) !== -1) val = this.remainingMoves.indexOf(index);
     else if(this.remainingMoves.find(x => x > index) !== undefined) val = this.remainingMoves.find(x => x > index) as number;
     else return false;
 
@@ -453,7 +453,8 @@ export class GameComponent implements OnInit {
   pcPlays() 
   {
     this.shakeDice();
-    //setTimeout(1000);
+    console.log(this.remainingMoves);
+
     this.checkGrave();
     if(this.grave[1] >= this.remainingMoves.length) this.saveFromGraveAll();
     else if(this.grave[1] > 0) 
@@ -489,9 +490,38 @@ export class GameComponent implements OnInit {
  
   playRemainMoves()
   {
-    this.breakOppLosePer();
+    this.playFinishMoves();
+    if(this.remainingMoves.length > 0) this.breakOppLosePer();
     if(this.remainingMoves.length > 0) this.losePoorPer();
     if(this.remainingMoves.length > 0) this.tryToStayAllPerRich();
+    if(this.remainingMoves.length > 0) this.makeWorseMove();
+  }
+
+  playFinishMoves()
+  {
+    this.remainingMoves.forEach( x =>
+    {
+      if(this.checkPCCanFinish(x))
+      {
+        this.field[x].value--;
+        this.finished[1]++;
+        if(this.field[x].value == 0) this.field[x].user = 0; 
+      }
+    });
+  }
+
+  checkPCCanFinish(move : number)
+  {
+    if(this.field.find((x,i) => (x.user == 2 && i < 18 ))  !== undefined) return false;
+    let index = 24-move;
+
+    let val :number;
+    if(this.field.findIndex( (x,i) =>  i === index)) val = this.remainingMoves.indexOf(move);
+    else if(this.remainingMoves.find( (x,i) => i < index) === undefined) val = this.remainingMoves.find(x => x > index) as number;
+    else return false;
+
+    this.remainingMoves.splice(val,1);
+    return true;
   }
 
   breakOppLosePer()
@@ -510,12 +540,13 @@ export class GameComponent implements OnInit {
     this.remainingMoves.forEach((x,i) => {
       if(poorPer.length > 0)
       {
-        let key = poorPer.findIndex(y => y+x <= 23 && this.field[y+x].user == 1);
-        if(key !== undefined) 
+        let key = poorPer.findIndex(y => y+x <= 23 && this.field[y+x].user == 2);
+        if(key !== -1) 
         {
           this.field[poorPer[key]+x].value = 1;
           this.field[poorPer[key]+x].user = 2;
           this.field[poorPer[key]].value--;
+          if(this.field[poorPer[key]].value == 0) this.field[poorPer[key]].user = 0;
           remainingMovesDeleted.push(i);
         }
       }
@@ -541,10 +572,11 @@ export class GameComponent implements OnInit {
       if(poorPer.length > 0)
       {
         let key = poorPer.findIndex(y => y+x <= 23 && this.field[y+x].user == 2);
-        if(key !== undefined) 
+        if(key !== -1) 
         {
           this.field[poorPer[key]+x].value++;
           this.field[poorPer[key]].value--;
+          if(this.field[poorPer[key]].value == 0) this.field[poorPer[key]].user = 0;
           remainingMovesDeleted.push(i);
         }
       }
@@ -555,9 +587,41 @@ export class GameComponent implements OnInit {
 
   tryToStayAllPerRich()
   {
-    //let richPers : number[] = this.field.filter(x => x.user==2 && x.value>1);
+    let remainingMovesDeleted : number[] = [];
+    let richPers : number[] = [];
+    this.field.forEach((x,i) => {
+      if(x.user==2 && x.value>1) richPers.push(i);
+    });
 
+    this.remainingMoves.forEach((x,i) => {
+      richPers.forEach(a => {
+        if(richPers.find(b => b == a+x) !== undefined)
+        {
+          this.field[a+x].value++;
+          this.field[a].value--;
+          remainingMovesDeleted.push(i);
+        }
+      });
+    });
 
+    remainingMovesDeleted.forEach(a => this.remainingMoves.splice(a,1));
+  }
+
+  makeWorseMove()
+  {
+    debugger;
+    this.remainingMoves.forEach(a => {
+      let key = this.field.findIndex((x,i) => x.user == 2 && (this.field[i+a].user !== 1 || this.field[i+a].value < 2));
+      if(key !== -1)
+      {
+        this.field[key].value--;
+        if(this.field[key].value == 0) this.field[key].user = 0;
+        this.field[key+a].user = 2;
+        this.field[key+a].value = (this.field[key+a].user == 0) ? 1 : this.field[key+a].value+1;
+      }
+    });
+
+    this.remainingMoves = [];
   }
 }
 
