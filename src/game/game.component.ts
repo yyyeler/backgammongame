@@ -52,7 +52,7 @@ export class GameComponent implements OnInit {
     else this.winTitles = ["User 1 won","User 2 won"];
   }
 
-  async shakeDice()
+   shakeDice()
   {
     let dice1 = Math.floor(Math.random() * 6)+1;
     let dice2 = Math.floor(Math.random() * 6)+1;
@@ -63,7 +63,7 @@ export class GameComponent implements OnInit {
     this.remainDice = false;
 
     this.playAudio("dice");
-    await this.diceAnimation();
+    //await this.diceAnimation();
 
     this.imageSrc1 = this.getDiceUrl(dice1);
     this.imageSrc2 = this.getDiceUrl(dice2);
@@ -102,7 +102,7 @@ export class GameComponent implements OnInit {
     this.holdingValue = -2;
 
     if(this.gameType == 'local') this.playAudio("slide"); 
-    if(!this.userOrder && this.gameType == 'pc') this.pcPlays();
+    if((!this.userOrder) && this.gameType == 'pc') this.pcPlays();
   }
 
   makeMove(val1 : number, val2 : number, swtch : boolean , comeToGrave : boolean)
@@ -318,8 +318,13 @@ export class GameComponent implements OnInit {
     return true;
   }
 
-  getDiceUrl(val : number) : string { return "assets/img/dice_"+val+".png";  }
-  showGraveOrFinishedTable(isGrave : boolean) { return isGrave ? (this.grave[0] + this.grave[1]) > 0 : (this.finished[0] + this.finished[1]); }
+  getDiceUrl(val : number) : string { 
+    return "assets/img/dice_"+val+".png";  
+  }
+
+  showGraveOrFinishedTable(isGrave : boolean) { 
+    return isGrave ? (this.grave[0] + this.grave[1]) > 0 : (this.finished[0] + this.finished[1]); 
+  }
 
   doItemHavePlus(val1 : number , val2 : number , swtch : boolean)
   {
@@ -482,7 +487,6 @@ export class GameComponent implements OnInit {
   {
     this.shakeDice();
 
-    this.checkGrave();
     if(this.grave[1] >= this.remainingMoves.length) this.saveFromGraveAll();
     else if(this.grave[1] > 0) 
     {
@@ -501,18 +505,22 @@ export class GameComponent implements OnInit {
   {
     let usedMoves : number[] = [];
     this.remainingMoves.forEach(x => {
-      if([0,2].includes(this.field[x-1].user) && this.grave[1] > 0)
+      if((this.field[x-1].user !== 1 || this.field[x-1].value == 1) && this.grave[1] > 0)
       {
         this.grave[1]--;
+        if(this.field[x-1].user === 1) this.field[x-1].value = 1;
+        else this.field[x-1].value ++;
         this.field[x-1].user = 2;
-        this.field[x-1].value ++;
         usedMoves.push(x);
       }
     });
 
-    usedMoves.forEach(i => {
-      this.remainingMoves.splice(this.remainingMoves.findIndex(x => x == i),1);
-    });
+    if(this.grave[1] < this.remainingMoves.length)
+    {
+      usedMoves.forEach(i => {
+        this.remainingMoves.splice(this.remainingMoves.findIndex(x => x == i),1);
+      });
+    }
   }
  
   playRemainMoves()
@@ -553,6 +561,7 @@ export class GameComponent implements OnInit {
 
   breakOppLosePer()
   {
+    console.log("breakOppLosePer");
     let poorPer : number [] = [];
     this.field.forEach((x,i) => {
       if(x.user == 1 && x.value == 1 )  poorPer.push(i);
@@ -563,27 +572,30 @@ export class GameComponent implements OnInit {
 
   killOppPoorPer(poorPer : number[])
   {
-    let remainingMovesDeleted = [];
+    let remainingMovesDeleted: number[] = [];
     this.remainingMoves.forEach((x,i) => {
       if(poorPer.length > 0)
       {
-        let key = poorPer.findIndex(y => y+x <= 23 && this.field[y+x].user == 2);
+        let key = poorPer.findIndex(y => y-x >=0 && this.field[y-x].user == 2);
         if(key !== -1) 
         {
-          this.field[poorPer[key]+x].value = 1;
-          this.field[poorPer[key]+x].user = 2;
-          this.field[poorPer[key]].value--;
-          if(this.field[poorPer[key]].value == 0) this.field[poorPer[key]].user = 0;
+          this.field[poorPer[key]].value = 1;
+          this.field[poorPer[key]].user = 2;
+          this.grave[0]++;
+          this.field[poorPer[key]-x].value--;
+          if(this.field[poorPer[key]-x].value == 0) this.field[poorPer[key]-x].user = 0;
+          poorPer.splice(key,1);
           remainingMovesDeleted.push(i);
         }
       }
-      
-      remainingMovesDeleted.forEach(a => this.remainingMoves.splice(a,1));
     });
+
+    for(let a=(remainingMovesDeleted.length-1); a>=0;a--) this.remainingMoves.splice(a,1);
   }
 
   losePoorPer()
   {
+    console.log("losePoorPer");
     let poorPer : number [] = [];
     this.field.forEach((x,i) => {
       if(x.user == 2 && x.value == 1 )  poorPer.push(i);
@@ -614,6 +626,7 @@ export class GameComponent implements OnInit {
 
   tryToStayAllPerRich()
   {
+    console.log("tryToStayAllPerRich");
     let remainingMovesDeleted : number[] = [];
     let richPers : number[] = [];
     this.field.forEach((x,i) => {
@@ -636,14 +649,15 @@ export class GameComponent implements OnInit {
 
   makeWorseMove()
   {
+    console.log("makeWorseMove");
     this.remainingMoves.forEach(a => {
       let key = this.field.findIndex((x,i) => x.user == 2 && (this.field[i+a].user !== 1 || this.field[i+a].value < 2));
       if(key !== -1)
       {
         this.field[key].value--;
-        if(this.field[key].value == 0) this.field[key].user = 0;
-        this.field[key+a].user = 2;
+        if(this.field[key].value === 0) this.field[key].user = 0;
         this.field[key+a].value = (this.field[key+a].user == 0) ? 1 : this.field[key+a].value+1;
+        this.field[key+a].user = 2;
       }
     });
 
@@ -665,7 +679,7 @@ export class GameComponent implements OnInit {
       for (let i = 0; i < 25; i++) {
         setTimeout(() => {
           this.imageSrc1 = this.getDiceUrl((i % 6) + 1);
-          this.imageSrc2 = this.getDiceUrl(((18 - i) % 6) + 1);
+          this.imageSrc2 = this.getDiceUrl(((25 - i) % 6) + 1);
   
           if (i === 24) {
             resolve();
