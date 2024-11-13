@@ -63,7 +63,7 @@ export class GameComponent implements OnInit {
     this.remainDice = false;
 
     this.playAudio("dice");
-    //await this.diceAnimation();
+    this.diceAnimation();
 
     this.imageSrc1 = this.getDiceUrl(dice1);
     this.imageSrc2 = this.getDiceUrl(dice2);
@@ -674,19 +674,17 @@ export class GameComponent implements OnInit {
     }
   }
 
-  diceAnimation(): Promise<void> {
-    return new Promise((resolve) => {
-      for (let i = 0; i < 25; i++) {
-        setTimeout(() => {
-          this.imageSrc1 = this.getDiceUrl((i % 6) + 1);
-          this.imageSrc2 = this.getDiceUrl(((25 - i) % 6) + 1);
-  
-          if (i === 24) {
-            resolve();
+  async diceAnimation()
+  {
+    await (() => {
+        for (let i = 0; i < 25; i++) 
+          {
+            setTimeout(() => {
+              this.imageSrc1 = this.getDiceUrl((i % 6) + 1);
+              this.imageSrc2 = this.getDiceUrl(((25 - i) % 6) + 1);
+            }, i * 10); 
           }
-        }, i * 10); 
-      }
-    });
+      });
   }
 
   changeSound()
